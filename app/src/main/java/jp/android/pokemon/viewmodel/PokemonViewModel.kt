@@ -1,8 +1,14 @@
-package jp.android.pokemon
+package jp.android.pokemon.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import jp.android.pokemon.data.model.FavoritePokemon
+import jp.android.pokemon.domain.model.Pokemon
+import jp.android.pokemon.domain.model.PokemonDetails
+import jp.android.pokemon.domain.repository.FavoritePokemonRepository
+import jp.android.pokemon.ui.state.PokemonListUiState
+import jp.android.pokemon.domain.repository.PokemonRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

@@ -1,5 +1,7 @@
-package jp.android.pokemon
+package jp.android.pokemon.domain.repository
 
+import jp.android.pokemon.data.local.FavoritePokemonDao
+import jp.android.pokemon.data.model.FavoritePokemon
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 

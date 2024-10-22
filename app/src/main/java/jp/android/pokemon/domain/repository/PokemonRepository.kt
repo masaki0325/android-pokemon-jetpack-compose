@@ -1,5 +1,8 @@
-package jp.android.pokemon
+package jp.android.pokemon.domain.repository
 
+import jp.android.pokemon.data.remote.PokemonApiService
+import jp.android.pokemon.domain.model.PokemonDetails
+import jp.android.pokemon.domain.model.PokemonResponse
 import javax.inject.Inject
 
 class PokemonRepository @Inject constructor(private val pokemonApiService: PokemonApiService) {

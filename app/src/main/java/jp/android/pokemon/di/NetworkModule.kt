@@ -1,9 +1,10 @@
-package jp.android.pokemon
+package jp.android.pokemon.di
 
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import jp.android.pokemon.data.remote.PokemonApiService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit

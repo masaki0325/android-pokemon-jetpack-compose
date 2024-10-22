@@ -1,9 +1,8 @@
-package jp.android.pokemon
+package jp.android.pokemon.ui.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow

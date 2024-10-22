@@ -1,4 +1,4 @@
-package jp.android.pokemon
+package jp.android.pokemon.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
@@ -6,6 +6,10 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import jp.android.pokemon.ui.screens.FavoritesScreen
+import jp.android.pokemon.ui.screens.PokemonDetailScreen
+import jp.android.pokemon.ui.screens.PokemonListScreen
+import jp.android.pokemon.ui.screens.SettingsScreen
 
 @Composable
 fun PokemonNavGraph(navController: NavHostController) {

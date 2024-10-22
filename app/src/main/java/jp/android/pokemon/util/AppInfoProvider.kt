@@ -1,4 +1,4 @@
-package jp.android.pokemon
+package jp.android.pokemon.util
 
 import android.content.Context
 import android.content.pm.PackageInfo

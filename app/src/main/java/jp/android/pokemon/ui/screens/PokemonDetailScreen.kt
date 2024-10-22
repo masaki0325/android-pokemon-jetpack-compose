@@ -1,4 +1,4 @@
-package jp.android.pokemon
+package jp.android.pokemon.ui.screens
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,7 +29,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
+import jp.android.pokemon.data.model.FavoritePokemon
+import jp.android.pokemon.domain.model.PokemonDetails
+import jp.android.pokemon.domain.model.Sprites
 import jp.android.pokemon.ui.theme.PokemonTheme
+import jp.android.pokemon.viewmodel.PokemonViewModel
 
 
 @Composable

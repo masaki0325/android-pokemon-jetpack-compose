@@ -28,6 +28,7 @@ This project uses the following technologies:
 - **Navigation Compose 2.8.3**: Jetpack Compose Navigation
 - **Material3 1.3.0**: Material Design components
 
+```````
 /app
     └── src/main/
         ├── java/
@@ -49,7 +50,7 @@ This project uses the following technologies:
             ├── layout/                  # XML layout files (if any)
             ├── drawable/                # Image assets
             └── values/                  # Colors, strings, themes
-
+```````
 
 ## Requirements
 

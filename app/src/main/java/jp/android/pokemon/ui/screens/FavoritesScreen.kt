@@ -31,14 +31,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import jp.android.pokemon.data.model.FavoritePokemon
 import jp.android.pokemon.ui.theme.PokemonTheme
-import jp.android.pokemon.viewmodel.PokemonViewModel
+import jp.android.pokemon.viewmodel.FavoriteViewModel
 
 @Composable
 fun FavoritesScreen(
     navController: NavController,
-    viewModel: PokemonViewModel = hiltViewModel()
+    viewModel: FavoriteViewModel = hiltViewModel()
 ) {
-    val pokemonList by viewModel.favoritePokemonList.collectAsState()
+    val pokemonList by viewModel.pokemonList.collectAsState()
     FavoritesScreen(
         pokemonList,
         onItemClicked = { pokemon ->

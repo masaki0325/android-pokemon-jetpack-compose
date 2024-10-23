@@ -33,6 +33,7 @@ import jp.android.pokemon.data.model.FavoritePokemon
 import jp.android.pokemon.domain.model.PokemonDetails
 import jp.android.pokemon.domain.model.Sprites
 import jp.android.pokemon.ui.theme.PokemonTheme
+import jp.android.pokemon.viewmodel.FavoriteViewModel
 import jp.android.pokemon.viewmodel.PokemonViewModel
 
 
@@ -40,18 +41,22 @@ import jp.android.pokemon.viewmodel.PokemonViewModel
 fun PokemonDetailScreen(
     pokemonId: String,
     navController: NavController,
-    viewModel: PokemonViewModel = hiltViewModel()
+    pokemonListViewModel: PokemonViewModel = hiltViewModel(),
+    favoriteViewModel: FavoriteViewModel = hiltViewModel(),
 ) {
-    val pokemonDetails by viewModel.pokemonDetails.collectAsState()
+    val pokemonDetails by pokemonListViewModel.pokemonDetails.collectAsState()
 
     LaunchedEffect(pokemonId) {
-        viewModel.fetchPokemonDetails(pokemonId)
+        pokemonListViewModel.fetchPokemonDetails(pokemonId)
     }
 
     pokemonDetails?.let { details ->
         PokemonDetailScreen(
             pokemonDetails = details,
             navController = navController,
+            addFavorite = { favoritePokemon ->
+                favoriteViewModel.addToFavorite(favoritePokemon)
+            }
         )
     } ?: CircularProgressIndicator()
 }
@@ -61,7 +66,7 @@ fun PokemonDetailScreen(
 private fun PokemonDetailScreen(
     pokemonDetails: PokemonDetails,
     navController: NavController,
-    viewModel: PokemonViewModel = hiltViewModel()
+    addFavorite: (FavoritePokemon) -> Unit,
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -75,7 +80,7 @@ private fun PokemonDetailScreen(
                 },
                 actions = {
                     IconButton(onClick = {
-                        viewModel.addToFavorite(
+                        addFavorite(
                             FavoritePokemon(
                                 id = pokemonDetails.id,
                                 name = pokemonDetails.name,
@@ -130,7 +135,8 @@ fun PreviewPokemonDetailScreen() {
     PokemonTheme {
         PokemonDetailScreen(
             pokemonDetails = details,
-            navController = rememberNavController()
+            navController = rememberNavController(),
+            addFavorite = { }
         )
     }
 }

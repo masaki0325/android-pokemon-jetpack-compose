@@ -6,9 +6,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import jp.android.pokemon.data.model.FavoritePokemon
 import jp.android.pokemon.domain.model.Pokemon
 import jp.android.pokemon.domain.model.PokemonDetails
-import jp.android.pokemon.domain.repository.FavoritePokemonRepository
 import jp.android.pokemon.ui.state.PokemonListUiState
-import jp.android.pokemon.domain.repository.PokemonRepository
+import jp.android.pokemon.domain.usecase.AddFavoriteUseCase
+import jp.android.pokemon.domain.usecase.GetAllFavoritesUseCase
+import jp.android.pokemon.domain.usecase.GetPokemonDetailsUseCase
+import jp.android.pokemon.domain.usecase.GetPokemonListUseCase
+import jp.android.pokemon.domain.usecase.RemoveFavoriteUseCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -17,10 +20,14 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+enum class LoadType {
+    INITIAL, PAGINATION
+}
+
 @HiltViewModel
 class PokemonViewModel @Inject constructor(
-    private val repository: PokemonRepository,
-    private val favoriteRepository: FavoritePokemonRepository
+    private val getPokemonListUseCase: GetPokemonListUseCase,
+    private val getPokemonDetailsUseCase: GetPokemonDetailsUseCase,
 ) : ViewModel() {
 
     private val _pokemonList = MutableStateFlow<List<Pokemon>>(emptyList())
@@ -32,38 +39,29 @@ class PokemonViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<PokemonListUiState>(PokemonListUiState.Loading)
     val uiState: StateFlow<PokemonListUiState> = _uiState
 
-    private var currentPage = 1 // 現在のページ番号を管理
-    private val pageSize = 20 // 1ページあたりの件数
+    private var offset = 0
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    val favoritePokemonList = favoriteRepository.getAllFavorites().stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        emptyList() // 初期値として空のリストを設定
-    )
-
     init {
-        fetchPokemonList(isInitialLoad = true)
+        fetchPokemonList(LoadType.INITIAL)
     }
 
-    private fun fetchPokemonList(isInitialLoad: Boolean = false) {
+    private fun fetchPokemonList(loadType: LoadType) {
         viewModelScope.launch {
-            if (isInitialLoad) {
-                _uiState.value = PokemonListUiState.Loading // 最初のロード時は全画面ローディング
-            } else {
-                _uiState.value = PokemonListUiState.PaginationLoading // ページネーション時のローディング
+            when (loadType) {
+                LoadType.INITIAL -> _uiState.value = PokemonListUiState.Loading
+                LoadType.PAGINATION -> _uiState.value = PokemonListUiState.PaginationLoading
             }
 
             _isLoading.value = true
-
             delay(1000)
             try {
-                val response = repository.getPokemonList(page = currentPage, limit = pageSize)
-                _pokemonList.value = _pokemonList.value + response.results
+                val response = getPokemonListUseCase.invoke(20, offset)
+                _pokemonList.value += response.results
                 _uiState.value = PokemonListUiState.Success
-                currentPage++
+                offset += 20
             } catch (e: Exception) {
                 _uiState.value = PokemonListUiState.Error(e.message ?: "An unexpected error occurred!")
             } finally {
@@ -74,26 +72,14 @@ class PokemonViewModel @Inject constructor(
 
     fun fetchPokemonDetails(pokemonId: String) {
         viewModelScope.launch {
-            val details = repository.getPokemonDetails(pokemonId)
+            val details = getPokemonDetailsUseCase(pokemonId)
             _pokemonDetails.value = details
         }
     }
 
     fun loadNextPage() {
         if (_isLoading.value.not()) {
-            fetchPokemonList(isInitialLoad = false)
-        }
-    }
-
-    fun addToFavorite(pokemon: FavoritePokemon) {
-        viewModelScope.launch {
-            favoriteRepository.insert(favoritePokemon = pokemon)
-        }
-    }
-
-    fun removeFavorite(pokemon: FavoritePokemon) {
-        viewModelScope.launch {
-            favoriteRepository.delete(favoritePokemon = pokemon)
+            fetchPokemonList(LoadType.PAGINATION)
         }
     }
 }

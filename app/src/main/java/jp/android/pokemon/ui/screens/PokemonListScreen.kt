@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
@@ -34,7 +35,6 @@ import jp.android.pokemon.ui.theme.PokemonTheme
 import jp.android.pokemon.viewmodel.PokemonViewModel
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
 fun PokemonListScreen(
     navController: NavController,
     viewModel: PokemonViewModel = hiltViewModel()
@@ -45,66 +45,141 @@ fun PokemonListScreen(
     val listState = rememberLazyListState()
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("ポケモン") }
-            )
-        }
+        topBar = { PokemonTopAppBar() }
     ) { paddingValues ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
+            modifier = Modifier.fillMaxSize().padding(paddingValues)
         ) {
             when (uiState) {
-                PokemonListUiState.Loading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                }
+                PokemonListUiState.Loading -> LoadingView()
                 PokemonListUiState.Success, PokemonListUiState.PaginationLoading -> {
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        items(pokemonList) { pokemon ->
-                            PokemonItem(pokemon, onItemClicked = {
-                                navController.navigate("pokemonDetail/${pokemon.pokemonId}")
-                            })
-                        }
-                        if (uiState is PokemonListUiState.PaginationLoading) {
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator()
-                                }
-                            }
-                        }
-                    }
-                    LaunchedEffect(listState) {
-                        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
-                            .collect { lastVisibleIndex ->
-                                if (lastVisibleIndex == pokemonList.size - 1 && !isLoading) {
-                                    viewModel.loadNextPage()
-                                }
-                            }
-                    }
+                    PokemonList(
+                        pokemonList = pokemonList,
+                        onItemClicked = { pokemonId ->
+                            navController.navigate("pokemonDetail/$pokemonId")
+                        },
+                        isLoading = isLoading,
+                        onEndReached = { viewModel.loadNextPage() },
+                        listState = listState,
+                        showPaginationLoading = uiState is PokemonListUiState.PaginationLoading
+                    )
                 }
                 is PokemonListUiState.Error -> {
-                    val errorMessage = (uiState as PokemonListUiState.Error).message
-                    Text(
-                        errorMessage,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    ErrorView((uiState as PokemonListUiState.Error).message)
                 }
             }
         }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PokemonTopAppBar() {
+    TopAppBar(title = { Text("ポケモン") })
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PokemonTopAppBarPreview() {
+    PokemonTheme {
+        PokemonTopAppBar()
+    }
+}
+
+@Composable
+fun LoadingView(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun LoadingViewPreview() {
+    PokemonTheme {
+        LoadingView()
+    }
+}
+
+@Composable
+fun ErrorView(
+    errorMessage: String,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            errorMessage,
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.align(Alignment.Center)
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ErrorViewPreview() {
+    PokemonTheme {
+        ErrorView(errorMessage = "エラーが発生しました")
+    }
+}
+
+@Composable
+fun PokemonList(
+    pokemonList: List<Pokemon>,
+    onItemClicked: (String) -> Unit,
+    isLoading: Boolean,
+    onEndReached: () -> Unit,
+    listState: LazyListState,
+    showPaginationLoading: Boolean
+) {
+    LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
+        items(pokemonList) { pokemon ->
+            PokemonItem(pokemon, onItemClicked = { onItemClicked(pokemon.pokemonId) })
+        }
+        if (showPaginationLoading) {
+            item {
+                LoadingView(modifier = Modifier.fillMaxWidth().padding(16.dp))
+            }
+        }
+    }
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+            .collect { lastVisibleIndex ->
+                if (lastVisibleIndex == pokemonList.size - 1 && !isLoading) {
+                    onEndReached()
+                }
+            }
+    }
+}
+@Preview(showBackground = true)
+@Composable
+private fun PokemonListPreview() {
+    PokemonTheme {
+        PokemonList(
+            pokemonList = listOf(
+                Pokemon("Pikachu", "https://pokeapi.co/api/v2/pokemon/25/"),
+                Pokemon("Charmander", "https://pokeapi.co/api/v2/pokemon/4/"),
+                Pokemon("Squirtle", "https://pokeapi.co/api/v2/pokemon/7/")
+            ),
+            onItemClicked = {},
+            isLoading = false,
+            onEndReached = {},
+            listState = rememberLazyListState(),
+            showPaginationLoading = true
+        )
+    }
+}
+
 
 @Composable
 fun PokemonItem(
@@ -112,11 +187,11 @@ fun PokemonItem(
     onItemClicked: () -> Unit
 ) {
     Column(
-        modifier = Modifier.clickable { onItemClicked() }
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onItemClicked() }
     ) {
-        Row(
-            modifier = Modifier.fillMaxSize()
-        ) {
+        Row {
             Text(
                 text = pokemon.pokemonId,
                 modifier = Modifier.padding(16.dp),

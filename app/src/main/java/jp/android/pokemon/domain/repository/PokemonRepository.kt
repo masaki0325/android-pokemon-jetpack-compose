@@ -7,8 +7,7 @@ import javax.inject.Inject
 
 class PokemonRepository @Inject constructor(private val pokemonApiService: PokemonApiService) {
 
-    suspend fun getPokemonList(page: Int, limit: Int = 20): PokemonResponse {
-        val offset = (page - 1) * limit  // ページに応じてオフセットを計算
+    suspend fun getPokemonList(limit: Int = 20, offset: Int): PokemonResponse {
         return pokemonApiService.getPokemonList(limit, offset)
     }
 

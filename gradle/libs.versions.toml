@@ -22,6 +22,9 @@ composeFoundation = "1.4.0"
 material3 = "1.3.0"
 composeUi = "1.7.4"
 paletteKtx = "1.0.0"
+paging = "3.3.2"
+paging-runtime = "3.3.2"
+paging-compose = "3.3.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -55,6 +58,8 @@ room-compiler = { group = "androidx.room", name = "room-compiler", version.ref =
 androidx-compose-foundation = { group = "androidx.wear.compose", name = "compose-foundation", version.ref = "composeFoundation" }
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "composeUi" }
 androidx-palette-ktx = { group = "androidx.palette", name = "palette-ktx", version.ref = "paletteKtx" }
+androidx-paging-runtime = { group = "androidx.paging", name = "paging-runtime", version.ref = "paging-runtime" }
+androidx-paging-compose = { group = "androidx.paging", name = "paging-compose", version.ref = "paging-compose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

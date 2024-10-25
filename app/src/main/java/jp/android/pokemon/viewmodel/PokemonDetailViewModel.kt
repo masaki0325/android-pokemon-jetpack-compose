@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jp.android.pokemon.domain.usecase.GetPokemonDetailsUseCase
 import jp.android.pokemon.ui.state.PokemonDetailUiState
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -13,7 +12,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PokemonDetailViewModel @Inject constructor(
-    private val getPokemonDetailsUseCase: GetPokemonDetailsUseCase
+    private val getPokemonDetailsUseCase: GetPokemonDetailsUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<PokemonDetailUiState>(PokemonDetailUiState.Loading)
@@ -22,7 +21,6 @@ class PokemonDetailViewModel @Inject constructor(
     fun fetchPokemonDetails(pokemonId: String) {
         viewModelScope.launch {
             _uiState.value = PokemonDetailUiState.Loading
-            delay(1000)
             try {
                 val details = getPokemonDetailsUseCase(pokemonId)
                 _uiState.value = PokemonDetailUiState.Success(details)

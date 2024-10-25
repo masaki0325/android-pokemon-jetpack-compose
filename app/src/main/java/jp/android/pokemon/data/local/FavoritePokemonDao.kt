@@ -15,6 +15,12 @@ interface FavoritePokemonDao {
     @Delete
     suspend fun delete(favoritePokemon: FavoritePokemon)
 
+    @Query("DELETE FROM favorite_pokemon WHERE pokemonId = :pokemonId")
+    suspend fun deleteByPokemonId(pokemonId: Int)
+
     @Query("SELECT * FROM favorite_pokemon")
     fun getAllFavorites(): Flow<List<FavoritePokemon>>
+
+    @Query("SELECT EXISTS(SELECT 1 FROM favorite_pokemon WHERE pokemonId = :pokemonId LIMIT 1)")
+    suspend fun isFavorite(pokemonId: Int): Boolean
 }

@@ -10,23 +10,27 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import jp.android.pokemon.data.model.FavoritePokemon
 import jp.android.pokemon.domain.model.PokemonDetails
@@ -46,9 +50,11 @@ fun PokemonDetailScreen(
     favoriteViewModel: FavoriteViewModel = hiltViewModel(),
 ) {
     val uiState by detailViewModel.uiState.collectAsState()
+    val isFavorite by favoriteViewModel.isFavorite.collectAsState()
 
-    LaunchedEffect(pokemonId) {
+    LaunchedEffect(key1 = pokemonId) {
         detailViewModel.fetchPokemonDetails(pokemonId)
+        favoriteViewModel.checkIfFavorite(pokemonId.toInt())
     }
 
     when (uiState) {
@@ -59,7 +65,13 @@ fun PokemonDetailScreen(
             val details = (uiState as PokemonDetailUiState.Success).details
             PokemonDetailScreen(
                 pokemonDetails = details,
-                navController = navController,
+                isFavorite = isFavorite,
+                popBackStack = {
+                    navController.popBackStack()
+                },
+                deleteFavorite = {
+                    favoriteViewModel.removeFavoriteByPokemonId(it)
+                },
                 addFavorite = {
                     favoriteViewModel.addToFavorite(it)
                 }
@@ -67,7 +79,9 @@ fun PokemonDetailScreen(
         }
         is PokemonDetailUiState.Error -> {
             val errorMessage = (uiState as PokemonDetailUiState.Error).message
-            ErrorView(errorMessage)
+            ErrorView(errorMessage, onRetry = {
+                detailViewModel.fetchPokemonDetails(pokemonId)
+            })
         }
     }
 }
@@ -76,32 +90,41 @@ fun PokemonDetailScreen(
 @Composable
 private fun PokemonDetailScreen(
     pokemonDetails: PokemonDetails,
-    navController: NavController,
+    isFavorite: Boolean,
+    popBackStack: () -> Unit,
     addFavorite: (FavoritePokemon) -> Unit,
+    deleteFavorite: (Int) -> Unit,
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text("Pokemon Detail") },
+                title = { Text("ポケモン詳細") },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    IconButton(onClick = { popBackStack() }) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
                     }
                 },
                 actions = {
                     IconButton(onClick = {
-                        addFavorite(
-                            FavoritePokemon(
-                                id = pokemonDetails.id,
-                                name = pokemonDetails.name,
-                                imageUrl = pokemonDetails.sprites.front_default
+                        if (isFavorite) {
+                            deleteFavorite(pokemonDetails.id)
+                        } else {
+                            addFavorite(
+                                FavoritePokemon(
+                                    pokemonId = pokemonDetails.id,
+                                    name = pokemonDetails.name,
+                                    imageUrl = pokemonDetails.sprites.front_default
+                                )
                             )
-                        )
+                        }
                     }) {
                         Icon(
-                            imageVector = Icons.Default.Favorite,
-                            contentDescription = "Add to Favorites"
+                            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "Add to Favorites",
                         )
                     }
                 }
@@ -109,12 +132,9 @@ private fun PokemonDetailScreen(
         }
     ) { paddingValues ->
         Box(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
         ) {
-            Column() {
+            Column {
                 AsyncImage(
                     model = pokemonDetails.sprites.front_default,
                     contentDescription = "Pokemon Sprite",
@@ -133,7 +153,7 @@ private fun PokemonDetailScreen(
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewPokemonDetailScreen() {
+private fun PreviewPokemonContentViewView() {
     val details = PokemonDetails(
         id = 25,
         name = "Pikachu",
@@ -145,9 +165,46 @@ fun PreviewPokemonDetailScreen() {
     )
     PokemonTheme {
         PokemonDetailScreen(
-            pokemonDetails = details,
-            navController = rememberNavController(),
-            addFavorite = { }
+            details,
+            isFavorite = false,
+            popBackStack = {},
+            addFavorite = {},
+            deleteFavorite = {}
         )
+    }
+}
+
+
+@Composable
+private fun ErrorView(
+    errorMessage: String,
+    onRetry: () -> Unit,
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column (
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = errorMessage)
+            Spacer(modifier = Modifier.height(16.dp))
+            TextButton(onClick = { onRetry() }) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    tint = MaterialTheme.colorScheme.primary,
+                    contentDescription = "Retry",
+                    modifier = Modifier.size(48.dp)
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewErrorView() {
+    PokemonTheme {
+        ErrorView("An error occurred", onRetry = {})
     }
 }

@@ -9,11 +9,19 @@ class FavoritePokemonRepository @Inject constructor(private val dao: FavoritePok
 
     fun getAllFavorites(): Flow<List<FavoritePokemon>> = dao.getAllFavorites()
 
+    suspend fun isFavorite(pokemonId: Int): Boolean {
+        return dao.isFavorite(pokemonId)
+    }
+
     suspend fun insert(favoritePokemon: FavoritePokemon) {
         dao.insert(favoritePokemon)
     }
 
     suspend fun delete(favoritePokemon: FavoritePokemon) {
         dao.delete(favoritePokemon)
+    }
+
+    suspend fun deleteById(pokemonId: Int) {
+        dao.deleteByPokemonId(pokemonId)
     }
 }

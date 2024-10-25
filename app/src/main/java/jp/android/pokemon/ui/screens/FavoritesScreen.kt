@@ -42,6 +42,7 @@ fun FavoritesScreen(
     FavoritesScreen(
         pokemonList,
         onItemClicked = { pokemon ->
+            navController.navigate("pokemonDetail/${pokemon.id}")
         },
         onDelete = { pokemon ->
             viewModel.removeFavorite(pokemon)
@@ -99,9 +100,24 @@ private fun FavoritesScreenPreview() {
     PokemonTheme {
         FavoritesScreen(
             listOf(
-                FavoritePokemon(1, "bulbasaur", "https://pokeapi.co/api/v2/pokemon/1/"),
-                FavoritePokemon(2, "ivysaur", "https://pokeapi.co/api/v2/pokemon/2/"),
-                FavoritePokemon(3, "venusaur", "https://pokeapi.co/api/v2/pokemon/3/"),
+                FavoritePokemon(
+                    1,
+                    1,
+                    "bulbasaur",
+                    "https://pokeapi.co/api/v2/pokemon/1/"
+                ),
+                FavoritePokemon(
+                    2,
+                    2,
+                    "ivysaur",
+                    "https://pokeapi.co/api/v2/pokemon/2/"
+                ),
+                FavoritePokemon(
+                    3,
+                    3,
+                    "venusaur",
+                    "https://pokeapi.co/api/v2/pokemon/3/"
+                )
             )
         )
     }
@@ -119,7 +135,7 @@ private fun PokemonItem(
                 .clickable { onItemClicked }
         ) {
             Text(
-                text = pokemon.id.toString(),
+                text = pokemon.pokemonId.toString(),
                 modifier = Modifier.padding(16.dp),
                 style = MaterialTheme.typography.titleLarge
             )
@@ -138,7 +154,12 @@ private fun PokemonItem(
 private fun PokemonItemPreview() {
     PokemonTheme {
         PokemonItem(
-            pokemon = FavoritePokemon(1, "bulbasaur", "https://pokeapi.co/api/v2/pokemon/1/"),
+            pokemon = FavoritePokemon(
+                1,
+                1,
+                "bulbasaur",
+                "https://pokeapi.co/api/v2/pokemon/1/"
+            ),
             onItemClicked = {}
         )
     }

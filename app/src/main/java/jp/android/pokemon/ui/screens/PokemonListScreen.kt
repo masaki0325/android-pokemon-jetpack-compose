@@ -26,6 +26,8 @@ import androidx.navigation.NavController
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import jp.android.pokemon.domain.model.Pokemon
+import jp.android.pokemon.ui.components.ErrorView
+import jp.android.pokemon.ui.components.LoadingView
 import jp.android.pokemon.ui.theme.PokemonTheme
 import jp.android.pokemon.viewmodel.PokemonViewModel
 
@@ -89,59 +91,6 @@ fun PokemonListScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun LoadingView(
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Text(
-            modifier = Modifier.padding(8.dp),
-            text = "Loading"
-        )
-        CircularProgressIndicator(
-            modifier = Modifier.padding(top = 8.dp),
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun LoadingViewPreview() {
-    PokemonTheme {
-        LoadingView()
-    }
-}
-
-@Composable
-private fun ErrorView(
-    errorMessage: String,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            errorMessage,
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.align(Alignment.Center)
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun ErrorViewPreview() {
-    PokemonTheme {
-        ErrorView(errorMessage = "エラーが発生しました")
     }
 }
 

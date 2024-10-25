@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,33 +31,45 @@ import coil.compose.AsyncImage
 import jp.android.pokemon.data.model.FavoritePokemon
 import jp.android.pokemon.domain.model.PokemonDetails
 import jp.android.pokemon.domain.model.Sprites
+import jp.android.pokemon.ui.components.ErrorView
+import jp.android.pokemon.ui.components.LoadingView
+import jp.android.pokemon.ui.state.PokemonDetailUiState
 import jp.android.pokemon.ui.theme.PokemonTheme
 import jp.android.pokemon.viewmodel.FavoriteViewModel
-import jp.android.pokemon.viewmodel.PokemonViewModel
-
+import jp.android.pokemon.viewmodel.PokemonDetailViewModel
 
 @Composable
 fun PokemonDetailScreen(
     pokemonId: String,
     navController: NavController,
-    pokemonListViewModel: PokemonViewModel = hiltViewModel(),
+    detailViewModel: PokemonDetailViewModel = hiltViewModel(),
     favoriteViewModel: FavoriteViewModel = hiltViewModel(),
 ) {
-    val pokemonDetails by pokemonListViewModel.pokemonDetails.collectAsState()
+    val uiState by detailViewModel.uiState.collectAsState()
 
     LaunchedEffect(pokemonId) {
-        pokemonListViewModel.fetchPokemonDetails(pokemonId)
+        detailViewModel.fetchPokemonDetails(pokemonId)
     }
 
-    pokemonDetails?.let { details ->
-        PokemonDetailScreen(
-            pokemonDetails = details,
-            navController = navController,
-            addFavorite = { favoritePokemon ->
-                favoriteViewModel.addToFavorite(favoritePokemon)
-            }
-        )
-    } ?: CircularProgressIndicator()
+    when (uiState) {
+        is PokemonDetailUiState.Loading -> {
+            LoadingView()
+        }
+        is PokemonDetailUiState.Success -> {
+            val details = (uiState as PokemonDetailUiState.Success).details
+            PokemonDetailScreen(
+                pokemonDetails = details,
+                navController = navController,
+                addFavorite = {
+                    favoriteViewModel.addToFavorite(it)
+                }
+            )
+        }
+        is PokemonDetailUiState.Error -> {
+            val errorMessage = (uiState as PokemonDetailUiState.Error).message
+            ErrorView(errorMessage)
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

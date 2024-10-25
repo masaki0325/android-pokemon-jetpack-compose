@@ -9,9 +9,11 @@ import jp.android.pokemon.domain.usecase.CheckFavoriteStatusUseCase
 import jp.android.pokemon.domain.usecase.GetAllFavoritesUseCase
 import jp.android.pokemon.domain.usecase.RemoveFavoriteByIdUseCase
 import jp.android.pokemon.domain.usecase.RemoveFavoriteUseCase
+import jp.android.pokemon.ui.state.FavoriteUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,11 +27,19 @@ class FavoriteViewModel @Inject constructor(
     private val checkFavoriteStatusUseCase: CheckFavoriteStatusUseCase
 ) : ViewModel() {
 
-    val pokemonList = getAllFavoritesUseCase.invoke().stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        emptyList()
-    )
+    val uiState: StateFlow<FavoriteUiState> = getAllFavoritesUseCase.invoke()
+        .map { favorites ->
+            if (favorites.isEmpty()) {
+                FavoriteUiState.Empty
+            } else {
+                FavoriteUiState.Success(favorites)
+            }
+        }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            FavoriteUiState.Loading // 初期状態をLoadingに設定
+        )
 
     private val _isFavorite = MutableStateFlow(false)
     val isFavorite: StateFlow<Boolean> = _isFavorite

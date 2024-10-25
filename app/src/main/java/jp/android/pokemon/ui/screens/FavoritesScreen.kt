@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -23,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,64 +32,91 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import jp.android.pokemon.data.model.FavoritePokemon
+import jp.android.pokemon.ui.state.FavoriteUiState
 import jp.android.pokemon.ui.theme.PokemonTheme
 import jp.android.pokemon.viewmodel.FavoriteViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoritesScreen(
     navController: NavController,
     viewModel: FavoriteViewModel = hiltViewModel()
 ) {
-    val pokemonList by viewModel.pokemonList.collectAsState()
-    FavoritesScreen(
-        pokemonList,
-        onItemClicked = { pokemon ->
-            navController.navigate("pokemonDetail/${pokemon.id}")
-        },
-        onDelete = { pokemon ->
-            viewModel.removeFavorite(pokemon)
-        }
-    )
-}
+    val uiState by viewModel.uiState.collectAsState()
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun FavoritesScreen(
-    pokemonList: List<FavoritePokemon>,
-    onItemClicked: (FavoritePokemon) -> Unit = {},
-    onDelete: (FavoritePokemon) -> Unit = {}
-) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("お気に入り") })
         }
     ) { paddingValues ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
         ) {
-            items(pokemonList, key = { it.id }) { pokemon ->
-                val swipeState = rememberSwipeToDismissBoxState()
-                SwipeToDismissBox(
-                    state = swipeState,
-                    backgroundContent = {
-                        if (swipeState.targetValue == SwipeToDismissBoxValue.EndToStart) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(Color.Red)
-                                    .padding(16.dp),
-                            )
-                        }
-                    }
-                ) {
-                    PokemonItem(pokemon = pokemon, onItemClicked = { onItemClicked(pokemon) })
+            when (uiState) {
+                is FavoriteUiState.Loading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center)
+                    )
                 }
-                if (swipeState.currentValue == SwipeToDismissBoxValue.EndToStart) {
-                    LaunchedEffect(pokemon) {
-                        onDelete(pokemon)
+                is FavoriteUiState.Success -> {
+                    val list = (uiState as FavoriteUiState.Success).favoriteList
+                    FavoritesList(
+                        list,
+                        onItemClicked = { favoritePokemon ->
+                            navController.navigate("pokemonDetail/${favoritePokemon.pokemonId}")
+                        },
+                        onDelete = { favoritePokemon ->
+                            viewModel.removeFavorite(favoritePokemon)
+                        }
+                    )
+                }
+                is FavoriteUiState.Empty -> {
+                    Text(
+                        text = "お気に入りがありません",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FavoritesList(
+    favoriteList: List<FavoritePokemon>,
+    onItemClicked: (FavoritePokemon) -> Unit = {},
+    onDelete: (FavoritePokemon) -> Unit = {}
+) {
+    LazyColumn() {
+        items(favoriteList, key = { it.id }) { pokemon ->
+            val swipeState = rememberSwipeToDismissBoxState()
+            SwipeToDismissBox(
+                state = swipeState,
+                backgroundContent = {
+                    if (swipeState.targetValue == SwipeToDismissBoxValue.EndToStart) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Red)
+                                .padding(16.dp),
+                        )
                     }
+                }
+            ) {
+                PokemonItem(
+                    pokemon = pokemon,
+                    onItemClicked = {
+                        onItemClicked(pokemon)
+                    }
+                )
+            }
+            if (swipeState.currentValue == SwipeToDismissBoxValue.EndToStart) {
+                LaunchedEffect(pokemon) {
+                    onDelete(pokemon)
                 }
             }
         }
@@ -98,7 +127,7 @@ private fun FavoritesScreen(
 @Composable
 private fun FavoritesScreenPreview() {
     PokemonTheme {
-        FavoritesScreen(
+        FavoritesList(
             listOf(
                 FavoritePokemon(
                     1,
@@ -132,7 +161,7 @@ private fun PokemonItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onItemClicked }
+                .clickable { onItemClicked() }
         ) {
             Text(
                 text = pokemon.pokemonId.toString(),

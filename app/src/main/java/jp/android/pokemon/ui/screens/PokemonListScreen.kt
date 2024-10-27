@@ -31,6 +31,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import jp.android.pokemon.domain.model.Pokemon
 import jp.android.pokemon.ui.components.ErrorView
 import jp.android.pokemon.ui.components.LoadingView
+import jp.android.pokemon.ui.components.PokemonSkeletonItem
 import jp.android.pokemon.ui.theme.PokemonTheme
 import jp.android.pokemon.viewmodel.PokemonViewModel
 
@@ -62,7 +63,12 @@ fun PokemonListScreen(
             when (pagingItems.loadState.refresh) {
                 // 初回ローディング中
                 is LoadState.Loading -> {
-                    LoadingView()
+                    // ロード中はスケルトンビューを表示
+                    LazyColumn {
+                        items(10) {
+                            PokemonSkeletonItem()
+                        }
+                    }
                 }
                 // 初回ローディング中にエラーが発生した場合
                 is LoadState.Error -> {
@@ -171,3 +177,4 @@ private fun PokemonItemPreview() {
         )
     }
 }
+

@@ -90,5 +90,6 @@ dependencies {
     implementation(libs.androidx.paging.compose)
 
     implementation(libs.compose.material)
+    implementation(libs.accompanist.placeholder.material)
 
 }
